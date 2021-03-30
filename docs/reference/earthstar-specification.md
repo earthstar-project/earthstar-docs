@@ -4,7 +4,7 @@ title: Earthstar Specification
 
 Format: `es.4`
 
-Document version: 2021-03-11.3
+Document version: 2021-03-30.0
 
 > The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
 > NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
@@ -1089,7 +1089,7 @@ let outgoingQueries = [
 ];
 ```
 
-(Sync queries are is not implemented yet as of Jan 2021.)
+(Sync queries are is not implemented yet as of March 2021.)
 
 ### Resolving Conflicts
 
@@ -1097,10 +1097,56 @@ See the [Data model](#data-model) section for details about conflict resolution.
 
 ## Future Directions
 
+These are not implemented or specified yet:
+
 ### Sparse Mode
+
+Allow handling documents without their content.  Then the content can be fetched later, on-demand.  This is especially useful for large documents that you don't always want, like image files in a wiki.
+
+Sparse documents would have `content: null` meaning the content is unknown or absent.  It's different than `content: ''` which means the document is empty.
+
+Doc signatures can be verified without having the content, because we only include the contentHash in the signature.
+
+See more [in this issue.](https://github.com/earthstar-project/earthstar/issues/33)
 
 ### Invite-Only Workspaces
 
-### Encryption
+Right now anyone can write to a workspace if they know its address.
+
+We can add a second kind of workspace which has a pubkey in its address. Every item posted in this kind of workspace must be signed by the workspace private key AND the author private key. This will be enforced by the feed format validator class.
+
+So to write you need to know the workspace private key. You can give the workspace secret to someone to invite them.
+
+Invite-only workspaces could also have their documents encrypted to the public key of the workspace.  Then only people who know the workspace key can read the documents.
+
+This separates permissions into two tiers depending on whether or not you know the workspace private key:
+1. sync all documents (read-only), and only understand the unencrypted ones
+2. also understand all documents, and be able to write documents.
+
+And that opes up new possibilities:
+* Peers and pubs can host workspaces without being able to edit them or maybe even understand them
+* A few authors could publish a workspace that many people could read but not edit.  It could be a blog, or it could contain the code files for an Earthstar app.
+
+See more [in this issue.](https://github.com/earthstar-project/earthstar/issues/7)
+
+### Transport Encryption
+
+Peers could encrypt their communications with SSL, Noise Protocol, etc.
+
+### Document Encryption
+
+The document `content` field can be encrypted by apps in any way they like.  We have some convenient keys available already:
+* You can write a private message to one author using their public key
+* You can write a private message to the entire workspace using the workspace public key (if it's an invite-only workspace)
+
+We could use a format like [private-box](https://www.npmjs.com/package/private-box) to allow multiple recipients.
+
+However, the rest of the document metadata will be in plaintext including the author, path, and timestamp, which might reveal important information.  App authors would have to use uninformative paths.  [This issue](https://github.com/earthstar-project/earthstar/issues/11) discusses ways of nesting the metadata inside another document to obscure it.
 
 ### Immutable Documents
+
+Documents that can't be edited.  They may or may not be able to be deleted, and they may or may not be ephemeral (expiring).
+
+This would probably involve a new optional document field, `immutable`.
+
+See more [in this issue.](https://github.com/earthstar-project/earthstar/issues/8).
