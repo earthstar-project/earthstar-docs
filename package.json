@@ -1,7 +1,13 @@
 {
-  "name": "earthstar",
-  "version": "0.0.0",
-  "private": true,
+  "name": "earthstar-docs",
+  "version": "1.0.0",
+  "description": "Docs website for Earthstar",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/earthstar-project/earthstar-docs.git"
+  },
+  "author": "Cinnamon <cinnamon_npm@fastmail.com>",
+  "license": "AGPL-3.0",
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",

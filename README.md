@@ -1,13 +1,15 @@
 # Website
 
-This website is built using [Docusaurus 2](https://v2.docusaurus.io/), a static website generator.
+This is the documentation website for Earthstar.  You can also just read the Markdown documents here on GitHub - look in the `docs` filder.
+
+This is built with [Docusaurus 2](https://v2.docusaurus.io/).
 
 ## To add new pages
 
 1. Add markdown files in the `docs` folder.
 2. Update the `sidebars.js` file to include your new file.
 
-## Formatting your markdown
+## Tips for formatting your markdown
 
 Don't use h1 (`#`), start at h2 (`##`).
 
