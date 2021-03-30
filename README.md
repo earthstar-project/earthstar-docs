@@ -1,4 +1,4 @@
-# Website
+# Earthstar Website
 
 This is the documentation website for Earthstar.  You can also just read the Markdown documents here on GitHub - look in the `docs` filder.
 
