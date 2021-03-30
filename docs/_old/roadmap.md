@@ -317,6 +317,7 @@ bare workspace
 ### TODO
 
 if doing conflict resolution by hand, do we need a `supercedes` field for backlinks to other old values that we're overriding?
+
 ## Markdown parsing experiment
 
 http://www.google.com

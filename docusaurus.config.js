@@ -2,9 +2,9 @@
 module.exports = {
     title: 'Earthstar',
     tagline: 'A toolkit for building distributed community apps',
-    url: 'https://TODO.com',
+    url: 'https://earthstar-docs.netlify.app/',
     baseUrl: '/',
-    onBrokenLinks: 'throw',
+    onBrokenLinks: 'warn',
     onBrokenMarkdownLinks: 'warn',
     favicon: 'img/favicon.ico',
     organizationName: 'earthstar-project', // Usually your GitHub org/user name.
