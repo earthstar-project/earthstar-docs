@@ -11,11 +11,11 @@ This is built with [Docusaurus 2](https://v2.docusaurus.io/).
 
 ## Tips for formatting your markdown
 
-Don't use h1 (`#`), start at h2 (`##`).
+Don't use h1 (`#`), start at h2 (`##`).  The title from the frontmatter will effectively be your h1.
 
-Your markdown file should start with a "front matter" which sets the page title in the sidebar and on the page itself.  The markdown filename is used as the URL for your page so avoid special characters.
+Your markdown file should start with a "frontmatter" which sets the page title in the sidebar and on the page itself.  The markdown filename is used as the URL for your page so avoid special characters.
 
-Front matter example:
+Frontmatter example:
 ```
 ---
 title: How To Do Things
@@ -25,6 +25,14 @@ title: How To Do Things
 
 Blah blah blah...
 ```
+
+[Docusaurus Frontmatter documentation](https://docusaurus.io/docs/api/plugins/@docusaurus/plugin-content-docs#markdown-frontmatter)
+
+## Color theme
+
+`/src/css/custom.css`
+
+https://docusaurus.io/docs/styling-layout#styling-your-site-with-infima
 
 ## Installation
 
