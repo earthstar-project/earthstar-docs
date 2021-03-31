@@ -7,6 +7,7 @@
 
 /* You can override the default Infima variables here. */
 :root {
+  /*
   --ifm-color-primary: #25c2a0;
   --ifm-color-primary-dark: rgb(33, 175, 144);
   --ifm-color-primary-darker: rgb(31, 165, 136);
@@ -15,6 +16,34 @@
   --ifm-color-primary-lighter: rgb(102, 212, 189);
   --ifm-color-primary-lightest: rgb(146, 224, 208);
   --ifm-code-font-size: 95%;
+  */
+
+  /* magenta for links */
+  /* color calculator here: https://docusaurus.io/docs/styling-layout */
+  --ifm-color-primary: #d023f4;
+  --ifm-color-primary-dark: #c80cef;
+  --ifm-color-primary-darker: #bd0be2;
+  --ifm-color-primary-darkest: #9c09ba;
+  --ifm-color-primary-light: #d63ef5;
+  --ifm-color-primary-lighter: #d94bf6;
+  --ifm-color-primary-lightest: #e173f8;
+  --ifm-code-font-size: 95%;
+}
+
+html[data-theme='dark'] {
+  /* slightly different, darker, less saturated magenta for dark mode */
+  --ifm-color-primary: #c43ce0;
+  --ifm-color-primary-dark: #bd23dc;
+  --ifm-color-primary-darker: #b221d0;
+  --ifm-color-primary-darkest: #931bac;
+  --ifm-color-primary-light: #cb55e4;
+  --ifm-color-primary-lighter: #cf61e6;
+  --ifm-color-primary-lightest: #da86ec;
+}
+
+/* underline links in markdown */
+.markdown a {
+    text-decoration: underline;
 }
 
 .docusaurus-highlight-code-line {
