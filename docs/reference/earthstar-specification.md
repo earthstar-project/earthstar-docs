@@ -4,7 +4,7 @@ title: Earthstar Specification
 
 Format: `es.4`
 
-Document version: 2021-03-30.0
+Document version: 2021-04-03.0
 
 > The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
 > NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
@@ -146,39 +146,50 @@ Also see the (non-normative) document [How does Earthstar handle timestamps, and
 ### Character Set Definitions
 
 ```
-ALPHA_LOWER = "abcdefghijklmnopqrstuvwxyz"
-ALPHA_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-DIGIT = "0123456789"
+ALPHA_LOWER = any of "abcdefghijklmnopqrstuvwxyz"
+ALPHA_UPPER = any of "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+DIGIT = any of "0123456789"
 
-B32CHAR = ALPHA_LOWER + "234567"
+B32_CHAR = ALPHA_LOWER + any of "234567"
 ALPHA_LOWER_OR_DIGIT = ALPHA_LOWER + DIGIT
+
+ASCII = decimal character code 0 to 127 inclusive
+      = hex character code 0x00 to 0x7F inclusive
+        (no "extended ASCII" > 0x7F)
 
 PRINTABLE_ASCII = characters " " to "~", inclusive
                 = decimal character code 32 to 126 inclusive
                 = hex character code 0x20 to 0x7E inclusive
 ```
 
+In this document, everywhere we say ASCII we mean "standard ASCII and not extended ASCII".  Only characters <= `0x7f`, none higher.
+
 ### Workspace Addresses
 
 ```
 WORKSPACE_ADDRESS = "+" NAME "." SUFFIX
-NAME = ALPHA_LOWER ALPHA_LOWER_OR_DIGIT*(0 to 14 characters)
-SUFFIX = ALPHA_LOWER ALPHA_LOWER_OR_DIGIT*(0 to 52 characters)
+NAME = one ALPHA_LOWER followed by 0 to 14 ALPHA_LOWER_OR_DIGIT
+SUFFIX = one ALPHA_LOWER followed by 0 to 52 ALPHA_LOWER_OR_DIGIT
 ```
 
-A workspace address starts with `+` and combines a **name** with a **suffix**.
+Example:
+```
++gardening.jfao38ifjhaolie
+```
 
-The name:
+A workspace address is a sequence of: plus character `+`, **name**, period `.`, **suffix**.
+
+It MUST have those four elements in that order.
+
+The **name**:
 * MUST be 1 to 15 characters long, inclusive.
-* MUST only contain digits and lowercase ASCII letters
+* MUST only contain digits `0-9` and lowercase ASCII letters `a-z`
 * MUST NOT start with a digit
 
-The suffix:
+The **suffix**:
 * MUST be 1 to 53 characters long, inclusive.
-* MUST only contain digits and lowercase ASCII letters
+* MUST only contain digits `0-9` and lowercase ASCII letters `a-z`
 * MUST NOT start with a digit
-
-A workspace address MUST have two parts separated by a single period.
 
 No uppercase letters are allowed.
 
@@ -190,6 +201,15 @@ Valid examples:
 +gardening.j230d9qjd0q09of4j
 +gardening.bnkksi5na3j7ifl5lmvxiyishmoybmu3khlvboxx6ighjv6crya5a
 +bestbooks2019.o049fjafo09jaf
+```
+
+Invalid examples:
+
+```
++a.b.c       // too many periods
++80smusic.x  // name can't start with a digit
++a.4ever     // suffix can't start with a digit
++PARTY.TIME  // no uppercase letters
 ```
 
 > **Why these rules?**
@@ -205,6 +225,8 @@ Workspace suffixes may be used in a variety of ways:
 Note that anyone can write to and read from a workspace if they know its full workspace address, so it's important to keep workspace addresses secret if you want to limit their audience.
 
 #### Invite-only Workspaces (coming soon)
+
+(This is also discussed in the Future Directions section: [Invite-only Workspaces](#invite-only-workspaces) )
 
 In the future, Earthstar will support **invite-only** workspaces.
 
@@ -223,23 +245,11 @@ TODO: We need a way to tell if a workspace is invite-only or not just by looking
 ### Author Addresses
 
 ```
-@suzy.bo5sotcncvkr7p4c3lnexxpb4hjqi5tcxcov5b4irbnnz2teoifua
-```
-
-An author address starts with `@` and combines a **shortname** with a **public key**.
-
-**Shortnames** are chosen by users when creating an author identity.  They cannot be changed later.  They are exactly 4 lowercase ASCII letters or digits, and cannot start with a digit.
-
-**Public keys** are 32-byte ed25519 public keys (just the integer), encoded as base32 with an extra leading "b".  This results in 52 characters of base32 plus the "b", for a total of 53 characters.
-
-**Private keys** (called "secrets") are also 32 bytes of binary data (just the secret integer), encoded as base32 in the same way.
-
-```
 AUTHOR_ADDRESS = "@" SHORTNAME "." B32_PUBKEY
-SHORTNAME = ALPHA_LOWER*1 ALPHA_LOWER_OR_DIGIT*3
-B32_PUBKEY = "b" B32CHAR*52
+SHORTNAME = one ALPHA_LOWER followed by three ALPHA_LOWER_OR_DIGIT
+B32_PUBKEY = "b" followed by 52 B32_CHAR
 
-AUTHOR_SECRET = "b" B32CHAR*52
+AUTHOR_SECRET = "b" followed by 52 B32_CHAR
 ```
 
 Examples
@@ -251,9 +261,17 @@ address: @js80.bnkivt7pdzydgjagu4ooltwmhyoolgidv6iqrnlh5dc7duiuywbfq
 secret: b4p3qioleiepi5a6iaalf6pm3qhgapkftxnxcszjwa352qr6gempa
 ```
 
+An author address starts with `@` and combines a **shortname** with a **public key**.
+
+* **Shortnames** are chosen by users when creating an author identity.  They cannot be changed later.  They are exactly 4 lowercase ASCII letters or digits, and cannot start with a digit.
+
+* **Public keys** are 32-byte ed25519 public keys (just the integer portion, no wrapper or surrounding data structures), encoded as base32 with an extra leading "b".  This results in 52 characters of base32 plus the "b", for a total of 53 characters.
+
+* **Private keys** (called "secrets") are also 32 bytes of binary data (just the secret integer), encoded as base32 in the same way as the public key.
+
 Apps MUST treat authors as separate and distinct when their addresses differ, even if only the shortname is different and the pubkeys are the same.
 
-Note that authors also have **display names** stored in their **profile documents**.  See the next section.
+Note that authors also have Unicode **display names** stored in their **profile documents**, and those can be changed and allow more freedom of expression.  See the next section.
 
 ### FAQ: Author Shortnames
 
@@ -303,7 +321,7 @@ Note that authors also have **display names** stored in their **profile document
 
 ### Author Display Names and Profile Info
 
-An author can have a **profile** containing display names, biographic information, etc.  Profile data is stored in a variety of documents under `/about/`:
+An author can have a **profile** containing their **display name**, biographic information, etc.  Profile data is stored in the `content` of a variety of documents under `/about/`:
 
 ```
 displayNamePath = "/about/~" + authorAddress + "/displayName.txt"
@@ -314,7 +332,7 @@ Example:
 
 Display names stored in profile information can be changed frequently and can contain Unicode.
 
-The expected paths and format of the profile documents are described in our wiki at [Standard paths and data formats used by apps](https://github.com/earthstar-project/earthstar/wiki/Standard-paths-and-data-formats-used-by-apps#about-author-profile-info).
+The expected paths and format of the profile documents are described in our wiki at [Standard paths and data formats used by apps](https://github.com/earthstar-project/earthstar/wiki/Standard-paths-and-data-formats-used-by-apps#about-author-profile-info).  They are not part of this lower-level specification.
 
 We may add more standard pieces of profile information later, such as following and blocking of other users, a paragraph about yourself, a user icon, etc, but this is not standardized yet.
 
@@ -330,26 +348,30 @@ However, apps SHOULD consider the `/about/` namespace to be a standardizable are
 
 ### Paths
 
-Similar to a key in leveldb or a path in a filesystem, each document is stored at a specific path.
+Similar to a key in leveldb or a path in a filesystem, each document is stored at a specific **path**.
 
 Rules:
 
 ```
-PATH_PUNCTUATION = "/'()-._~!$&+,:=@%"  // double quote is not included
+// note that double quote is not included,
+// it's just part of our notation in this specification
+PATH_PUNCTUATION = any of "/'()-._~!$&+,:=@%"
+
 PATH_CHARACTER = ALPHA_LOWER + ALPHA_UPPER + DIGIT + PATH_PUNCTUATION
 
-PATH_SEGMENT = "/" PATH_CHARACTER+
-PATH = PATH_SEGMENT+
+PATH_SEGMENT = "/" + one or more PATH_CHARACTER
+PATH = one or more PATH_SEGMENT
 ```
 
 * A path MUST be between 2 and 512 characters long (inclusive).
 * A path MUST begin with a `/`
 * A path MUST NOT end with a `/`
-* A path MUST NOT begin with `/@`
-* A path MUST NOT contain `//` (because each path segment must have at least one `PATH_CHARACTER`)
-* Paths MAY contain upper and/or or lower case ASCII letters plus the punctuation and numbers described above.  Paths are case sensitive.
-* Paths MUST NOT contain any characters except those listed above.  To include other characters such as spaces, double quotes, or non-ASCII characters, apps SHOULD use [URL-style percent-encoding as defined in RFC3986](https://tools.ietf.org/html/rfc3986#section-2.1).  First encode the string as utf-8, then percent-encode the utf-8 bytes.
-* A path MUST contain at least one `!` character, anywhere, IF AND ONLY IF the document is ephemeral (has a non-null `deleteAfter`).
+* A path MUST NOT begin with `/@`, but it may contain `/@` in the middle.
+* A path MUST NOT contain `//` (because each `PATH_SEGMENT` must have at least one `PATH_CHARACTER`)
+* Paths are case sensitive.
+* Paths MAY contain upper and/or or lower case ASCII letters plus the punctuation and numbers described above.
+* Paths MUST NOT contain any characters except those listed above.  To include other characters such as spaces, double quotes, emojis, or other non-ASCII characters, apps SHOULD use [URL-style percent-encoding as defined in RFC3986](https://tools.ietf.org/html/rfc3986#section-2.1).  First encode the string as utf-8, then percent-encode the utf-8 bytes.
+* A path MUST contain one or more `!` characters, anywhere, IF AND ONLY IF the document is ephemeral (because `deleteAfter` is non-null).  See the section on [Ephemeral Documents](#ephemeral-documents-deleteafter).
 
 In the following examples, `...` is used to shorten author addresses for easier reading.
 `...` is not actually related to the Path specification.
@@ -361,6 +383,7 @@ Valid:
     /wiki/shared/Dolphins.md
     /wiki/shared/Dolphin%20Sounds.md
     /about/~@suzy.bo5sotcn...fua/profile.json
+    /wall/@suzy.bo5sotcn...fua/post123.md
 
 Invalid: path segment must have one or more path characters
     /
@@ -381,7 +404,7 @@ Invalid: starts with "/@"
 > When building web URLs out of Earthstar pieces, we may want to use formats like this:
 >
 > ```
-> https://mypub.com/:workspace/:path_or_author
+> https://mypub.com/WORKSPACE/PATH_OR_AUTHOR
 >
 > https://mypub.com/+gardening.friends/wiki/Dolphins
 > https://mypub.com/+gardening.friends/@suzy.bo5sotcncvkr7...  (etc)
@@ -413,18 +436,40 @@ The list of ALLOWED characters up above is canonical and exhaustive.  This list 
 
 See the source code `src/util/characters.ts` for longer notes.
 
+Character - reason for being disallowed
+
 * space           - not allowed in URLs
-* `<>"[\]^{|}`    - not allowed in URLs
-* backtick        - not allowed in URLs
+* ASCII whitespace (tab, etc) - not allowed in URLs
+* ASCII control characters (bell, etc) - not allowed in URL, and not visible
+* `<>"[\]^{|}`    - not allowed in URLs.  `{}` MAY be used for path templates (see below)
+* `*`             - MAY be used for glob-style querying (see below)
+* \` backtick     - not allowed in URLs
 * `?`             - to avoid confusion with URL query parameters
 * `#`             - to avoid confusion with URL anchors
-* `;`             - no reason; maybe useful for separating several paths?
-* `*`             - maybe useful for querying in the future
-* non-ASCII chars - to avoid trouble with Unicode normalization and phishing
-* ASCII whitespace (tab, etc)
-* ASCII control characters (bell, etc)
+* `;`             - useful for separating several paths while still being legal in URLs
+* non-ASCII chars - (above `0x7F`) to avoid trouble with Unicode normalization and canonicalization for signatures, and phishing attacks
 
-### Write Permissions
+> **Path templates and glob-style querying**
+>
+> Earthstar libraries MAY offer extra ways of querying paths that use the `{}*?` characters.  This is not standardized, but those characters are available because they're not allowed in normal paths.
+>
+> Example: you might be able to query for `/blog/v1/{category}/{postId}.json` and get back matching documents with the `category` and `postId` extracted into variables for you, similar to the way URL routes are specified in libraries like Express.
+>
+> Example: you might be able to do "glob-style" queries like `/blog/v1/**/*.json`.
+
+> **Side note: The ASCII range of allowed path characters**
+> 
+> When handling path strings, you may find yourself needing to choose a separator character that will lexicographically sort before or after all allowed paths.
+>
+> If you're handling entire paths, this is easy, because all legal paths start with `/`.
+>
+> If you're handling path segments (the parts between slashes), the range is wider:
+>
+> Amongst the allowed path characters, the lowest ASCII value is exclamation mark `!` and the highest ASCII value is tilde `~`.  (Of course, not all ASCII values between those extremes are allowed.)
+> 
+> Therefore if you need an ASCII value that's lower than any possible path segment, anything less than or equal to space (`0x20`, decimal 32) will do.  And the only ASCII value higher than all path characters is `DEL` (`0x7F`, decimal 127).  Only standard ASCII values are allowed in paths, so there's nothing higher than `DEL`.
+
+### Write Permissions and Path Ownership
 
 Paths can encode information about which authors are allowed to write to them.  Documents that break these rules are invalid and will be ignored.
 
@@ -432,7 +477,7 @@ A path is **shared** if it contains no `~` (tilde) characters.  Any author can w
 
 A path is **owned** if it contains at least one `~`.  An author address immediately following a `~` is allowed to write to this path.  Multiple authors can be listed, each preceded by their own `~`, anywhere in the path.  The author address must begin with its usual leading `@`.
 
-Example shared paths:
+Example **shared** paths:
 
 ```
 Anyone can write here:
@@ -442,7 +487,7 @@ Anyone can write here because there's no tilde "~"
 /wall/@suzy.bo5sotcncvkr7p4c3lnexxpb4hjqi5tcxcov5b4irbnnz2teoifua/info.txt
 ```
 
-Example owned paths:
+Example **owned** paths:
 
 ```
 Only suzy can write here:
@@ -452,25 +497,29 @@ Suzy and matt can write here, and nobody else can:
 /chat/~@suzy.bo5sotcncvkr7p4c3lnexxpb4hjqi5tcxcov5b4irbnnz2teoifua~@matt.bwnhvniwd3agqclyxl4lirbf3qpfrzq7lnkzvfelg4afexcodz27a/messages.json
 ```
 
-This path can't be written by anyone.  It's **owned** because it contains a tilde `~`, but an owner is not specified:
+This path can't be written by anyone.  It's **owned** because it contains a tilde `~`, but an owner is not specified.  Even though the tilde appears without a `@` following it, it still acts as a marker of an owned path:
 
 ```
 /nobody/can/ever/write/this/path/~
 ```
 
+(TODO: loosen this restriction; treat `~` without a following `@` as a shared path?)
+
 The `tilde + author address` pattern can occur anywhere in the path: beginning, middle or end.
+
+Note that documents are mutable but their path can never change (or it would be a different document!) so the ownership of a particular path/document is permanent.  You can't change the ownership of a document; you have to create a new document at a different path.
 
 ### Path and Filename Conventions
 
 Multiple apps can put data in the same workspace.  Here are guidelines to help them interoperate:
 
-The first path segment SHOULD be a description of the data type or the application that will read/write it.  Examples: `/wiki/`, `/chess/`, `/chat/`, `/posts/`, `/earthstagram/`.
+The first path segment SHOULD be a description of the data type OR the application that will read/write it.  Examples: `/wiki/`, `/chess/`, `/chat/`, `/posts/`, `/earthstagram/`, `/sillywiki/`.
 
 > **Why?**
 >
-> Peers can selectively sync only certain documents.  Starting a path with a descriptive name like `/wiki/` makes it easy to sync only wiki documents and ignore the rest.  It also lets apps easily ignore data from other apps.
+> Peers can selectively sync only certain documents.  Starting a path with a descriptive name like `/wiki/` makes it easy to sync only wiki documents and ignore the rest.  It also lets apps avoid accidentally reading or writing documents from other apps.
 
-Sometimes this will represent a data type that many apps will support; sometimes it will be named after a specific app.
+Sometimes this first path segment will represent a data type that many apps will support; sometimes it will be named after a specific app.
 
 Consider including a version number in the path representing the version of the data format, like `/wiki-v1/` or `/wiki/v1/`.
 
@@ -480,7 +529,9 @@ Consider choosing a unique name for your app's data, like `/magic-todo-list/` in
 
 The last path segment SHOULD have a file extension to help applications know how to interpret the data.  For example, plain text documents should have paths ending in `.txt` and data encoded as JSON should have paths ending in `.json`.
 
-There is no way to explicitly signal that document content is binary (encoded as base64).  Applications will need to guess based on the file extension.
+Apps SHOULD use these file extensions to guess how to read and decode documents.
+
+There is no way to explicitly signal that document content is binary (encoded as base64).  Applications will need to guess based on the file extension.  TODO: improve this.
 
 See the [Content](#content) section for more details on base64 encoding of binary data.
 
@@ -493,6 +544,7 @@ This example document is shown as JSON though it can exist in many serialization
   "author": "@suzy.bjzee56v2hd6mv5r5ar3xqg3x3oyugf7fejpxnvgquxcubov4rntq",
   "content": "Flowers are pretty",
   "contentHash": "bt3u7gxpvbrsztsm4ndq3ffwlrtnwgtrctlq4352onab2oys56vhq",
+  "deleteAfter": null,
   "format": "es.4",
   "path": "/wiki/shared/Flowers",
   "signature": "bjljalsg2mulkut56anrteaejvrrtnjlrwfvswiqsi2psero22qqw7am34z3u3xcw7nx6mha42isfuzae5xda3armky5clrqrewrhgca",
@@ -521,30 +573,30 @@ All fields are REQUIRED.  Some fields may be null; these MUST NOT be omitted.
 
 Extra fields are FORBIDDEN.
 
-All string fields MUST BE limited to printable ASCII characters except for `content`, which is utf-8, or they can be null if specified above.
+All string fields MUST BE limited to `PRINTABLE_ASCII` characters except for `content`, which is utf-8, or they can be null if specified above.  `PRINTABLE_ASCII` is defined earlier, and notably does not contain newline or tab characters, which are reserved for use in the serialization format we use for hashing and signing.
 
 All number fields MUST BE integers, and cannot be NaN or Infinity, but they can be null if specified above.
 
-The order of fields is unspecified except for hashing and signing purposes (see section below).  For consistency, the recommended canonical order is alphabetical by field name.
+The order of fields is unspecified except for hashing and signing purposes (see section below).  For consistency, the recommended canonical order is lexicographic by field name.
 
 ### Document Validity
 
-A document MUST be valid in order to be ingested into storage, either from a local write or a sync.
+A document MUST be **valid** in order to be ingested into storage, either from a local write or a sync.
 
-Invalid documents MUST be individually ignored during a sync, and the sync MUST NOT be halted just because an invalid document was encountered.  Continue syncing in case there are more valid documents.
+Invalid documents MUST be individually ignored when peers are syncing, and the sync MUST NOT be halted just because an invalid document was encountered.  Continue syncing in case there are more valid documents.
 
 Documents can be temporarily invalid depending on their timestamp and the current wall clock.  Next time a sync occurs, maybe some of the invalid documents will have become valid by that time.
 
-To be valid a document MUST pass ALL these rules, which are described in more detail in the following sections:
+To be **valid** a document MUST pass ALL these rules, which are described in more detail in the following sections:
 
 * `author` is a valid author address string
 * `content` is a string holding utf-8 data
-* `contentHash` is the sha256 hash of the `content`, encoded as base32
+* `contentHash` is the sha256 hash of the `content`, encoded as base32 with a leading `b`, for a total length of 53 characters.
 * `timestamp` is an integer between 10^13 and 2^53-2, inclusive
 * `deleteAfter` is null, or is a timestamp integer in the same range as `timestamp`
 * `format` is a string of printable ASCII characters
 * `path` is a valid path string
-* `signature` is a 104-character base32 string
+* `signature` is a base32 string with a leading `b`.  For the `es.4` format it must be 104 characters long including the `b`.
 * `workspace` is a valid workspace address string which matches the local workspace we are intending to write the document to
 * No extra fields
 * No missing fields
@@ -554,29 +606,36 @@ To be valid a document MUST pass ALL these rules, which are described in more de
 
 ### Author
 
-The `author` field holds an author address, formatted according to the rules described earlier.
+The `author` field holds an author address, formatted according to the rules described earlier in [Author Addresses](#author-addresses).
 
 ### Content
 
 The `content` field contains arbitrary utf-8 encoded data.  If the data is not valid utf-8, the document is still considered valid but the library may return an error when trying to access the document.  (TODO: is this the best way to handle invalid utf-8?)
 
-To store raw binary data in a utf-8 string, apps SHOULD encode it as base64.  See the other [Content](#content) section for details.
+To store raw binary data in a utf-8 string, apps SHOULD encode it as base64.  In this case apps SHOULD put a file extension on the path that's well-known to be a binary format.  If you don't know what file extension to choose, use `.b64`.
 
-Apps SHOULD use the path's file extension to guess if a document contains textual data or base64-encoded binary data.
+When reading, apps SHOULD use the path's file extension to guess if a document contains textual data or base64-encoded binary data.
 
-TODO: we will be adding support for binary data and a way to unambiguously know which data is binary and which is utf8.
+TODO: We will be adding support for binary data and a way to unambiguously know which data is binary and which is utf8.
 
 > **Why no native support for binary data yet?**
 >
 > Common encodings such as JSON, and protocols built on them such as JSON-RPC and GraphQL, have to way to represent binary data, and we want to support the "least common denominator" standards that are widely used and known.
 
-`content` may be an empty string.  In fact, the recommended way to remove data from Earthstar is to overwrite the document with a new one which has `content = ""`.  Documents with empty content MAY be considered to be "deleted" and therefore omitted from some query results so that apps don't see them.
+The `content` field may be an empty string.  In fact, the recommended way to remove data from Earthstar is to overwrite the document with a new one which has `content = ""`.  Documents with empty-string content SHOULD be considered to be "deleted" and therefore omitted from some query results so that apps don't see them.  This depends on context; when syncing documents it's important to sync the "deleted" documents too because they act as tombstones.
 
-TODO: max length of content?
+TODO: The `content` field will have a maximum length of ??? bytes, to be determined, but likely on the order of 4 megabytes.  This is measured as "bytes after encoding to utf-8", not "number of utf-8 runes".
 
 #### Sparse Mode (eventually)
 
-In future versions the `content` will be allowed to be `null`, meaning we don't know what it is.  This allows handling document metadata without their actual content -- "sparse mode" -- and fetching the actual content later or on-demand.  This is not allowed in the current version.
+We plan to add "sparse mode".  This will allow `content` to be `null`, meaning the local peer don't know what the content is.  This allows handling documents' metadata without their actual content, in case the peer wants to save space now and fetch the actual content later, perhaps on-demand.
+
+This is not allowed yet; in the current version `content` MUST NOT be null.
+
+Once [Sync Queries](#sync-queries) are implemented, peers will be able to sync the full content of small documents and get sparse versions of large documents.
+
+
+It will be possible to verify the signature on sparse documents because it's based on the `contentHash`, which is always present.
 
 ### Content Hash
 
@@ -588,27 +647,25 @@ Wrong: `binary hash digest --> hex encoded string --> base32 encoded string`
 
 Correct: `binary hash digest --> base32 encoded string`
 
-Also be careful not to accidentally change the content string to a different encoding (such as utf-16) before hashing it.
-
-> **Why we use the content hash**
->
-> In the future we'll support "sparse mode" in which the `content` field may be `null`, if we only know the metadata for a document.  We want to still be able to verify signatures in this case, and the `contentHash` will be available, so we use the `contentHash` in the signed data instead of the entire content.
+Also be careful not to accidentally change the content string to a different encoding (such as utf-16) before hashing it -- hash the utf-8 bytes.
 
 ### Format
 
-The format is a short string describing which version of the Earthstar specification to use when interpreting the document.
+The format is a short string describing which version of the Earthstar specification to use when validating and interpreting the document.  It's like a schema name for the core Earthstar document format.
 
-It MUST consist only of printable ASCII characters.  TODO: max length of format?
+It MUST consist only of `PRINTABLE_ASCII` characters.
+
+TODO: max length of format?
 
 The current format version is `es.4` ("es" is short for Earthstar.)
 
 If the specification is changed in a way that breaks forwards or backwards compatability, the format version MUST be incremented.  The version number SHOULD be a single integer, not a semver.
 
-Other format families may someday exist, such as a hypothetical `ssb.1` which would embed Scuttlebutt messages in Earthstar documents, with special rules for validating the original Scuttlebutt signatures.
+Other format families may someday exist, such as a hypothetical `ssb.1` which would embed Scuttlebutt messages in Earthstar documents, with special rules for validating the original embedded Scuttlebutt signatures as part of validating the document.
 
 #### Format Validator Responsibilities
 
-Earthstar libraries SHOULD separate out code related to each format version, so that they can handle old and new documents side-by-side.  Code for handling a format version is called a **Validator**.  Validators are responsible for:
+Earthstar libraries SHOULD separate out the code related to each format version, so that they can handle old and new documents side-by-side.  Code for handling a format version is called a **Validator**.  Validators are responsible for:
 
 * Hashing documents
 * Signing new documents
@@ -622,7 +679,7 @@ TODO: define basic rules that documents of all formats must follow
 
 The `path` field is a string following the rules described in [Paths](#paths).
 
-The document is invalid if the author does not have permission to write to the path, following the rules described in [Write Permissions](#write-permissions).
+The document is invalid if the author does not have permission to write to the path, following the rules described in [Write Permissions and Path Ownership](#write-permissions-and-path-ownership).
 
 The path MUST contain at least one `!` character, anywhere, IF AND ONLY IF the document is ephemeral (has non-null `deleteAfter`).
 
@@ -630,17 +687,19 @@ The path MUST contain at least one `!` character, anywhere, IF AND ONLY IF the d
 
 Timestamps are integer **microseconds** (millionths of a second) since the Unix epoch.
 
+Note this is NOT the default format used by Javascript, which uses milliseconds (thousandths of a second).
+
 ```ts
-// javascript
+// Earthstar timestamps in javascript
 let timestamp = Date.now() * 1000;
 ```
 
 ```python
-# python
+# Earthstar timestamps in python
 timestamp = int(time.time() * 1000 * 1000)
 ```
 
-They MUST be within the following range (inclusive):
+Timestamps MUST be within the following range (inclusive):
 
 ```ts
 // 10^13
@@ -649,7 +708,9 @@ let MIN_TIMESTAMP = 10000000000000
 // 2^53 - 2  (Javascript's Number.MAX_SAFE_INTEGER - 1)
 let MAX_TIMESTAMP = 9007199254740990
 
-timestampIsValid = MIN_TIMESTAMP <= timestamp && timestamp <= MAX_TIMESTAMP;
+let timestampIsValid =
+    MIN_TIMESTAMP <= timestamp
+    && timestamp <= MAX_TIMESTAMP;
 ```
 
 > **Why this specific range?**
@@ -714,6 +775,8 @@ Ephemeral documents MAY be edited by users to change the expiration date.  This 
 
 The ed25519 signature by the author, encoded in base32 with a leading `b`.
 
+See [Serialization for Hashing and Signing](#serialization-for-hashing-and-signing), below, for details.
+
 Like the hashes and crypto keys in Earthstar, this is the raw binary signature encoded directly into base32.  Do not encode the binary signature into a hex string and then into base32.
 
 ### Workspace
@@ -724,7 +787,7 @@ Each document belongs to exactly one workspace and cannot be moved to another wo
 
 ## Document Serialization
 
-There are 3 scenarios when we need to serialize a document to a series of bytes:
+There are 3 scenarios when we need to serialize a document to/from a series of bytes:
 
 * Hashing and signing
 * Network transmission
@@ -743,7 +806,7 @@ To hash a document:
 ```ts
 // Pseudocode
 
-let hashDocument(document) : string => {
+let hashDocument(document): string => {
     // Get a deterministic hash of a document as a base32 string.
     // Preconditions:
     //   All string fields must be printable ASCII only
@@ -753,15 +816,31 @@ let hashDocument(document) : string => {
     //       integer
     //       integer | null
     //   Note that "string | integer" is not allowed
+    //   because we'd have no way of telling "123" apart from 123.
 
-    let accum : string = '';
-    For each field and value in the document, sorted in lexicographic order by field name:
+    let accum: string = '';
+
+    For each field and value in the document, sorted in lexicographic order by field name: {
+
+        // Skip the content and signatue fields
         if (field === 'content' || field === 'signature') { continue; }
-        if (value === null) { continue; }
-        accum += fieldname + "\t" + value + "\n"  // convert integers to string here
 
-    let binaryHashDigest = sha256(accum).digest();  // not hex digest string!
-    return base32encode(binaryHashDigest);  // in Earthstar b32 format with leading 'b'
+        // Skip null fields
+        if (value === null) { continue; }
+
+        // Otherwise, append the fieldname and value.
+        // Tab and newline are our field separators.
+        // Convert integers to strings here.
+        accum += fieldname + "\t" + value + "\n"
+
+        // (The newline is included on the last field.)
+    }
+
+    // Binary digest, not hex digest string!
+    let binaryHashDigest = sha256(accum).digest();
+
+    // Convert bytes to Earthstar b32 format with leading 'b'
+    return base32encode(binaryHashDigest);
 }
 ```
 
@@ -770,20 +849,26 @@ To sign a document:
 ```ts
 // Pseudocode
 
-let signDocument(authorKeypair, document) : void => {
+let signDocument(authorKeypair, document): void => {
     // Sign the document and store the signature into the document (mutating it).
-    // Keypair contains a pubkey and a private key
+    // authorKeypair contains a pubkey and a private key.
 
-    let binarySignature = ed25519sign(authorKeypair, hashDocument(document));
-    let base32signature = base32encode(binarySignature);  // in Earthstar b32 format with leading 'b'
+    let binarySignature = ed25519sign(
+        authorKeypair,
+        hashDocument(document)
+    );
+
+    // Convert bytes to Earthstar b32 format with leading 'b'
+    let base32signature = base32encode(binarySignature);
+
     document.signature = base32signature;
 }
 ```
 
 Preconditions that make this work:
 * Documents can only hold integers, strings, and null -- no floats or nested objects that could increase complexity or be nondeterministic
-* No document field name or field content can contain `\t` or `\n`, except `content`, which is not directly used (we use `contentHash` instead)
-* There are no fields that can hold either an integer or a string, so we don't need to worry about telling those types apart in the encoding.
+* No document field name or field content can contain `\t` or `\n`, except `content`, which is not directly used (we use `contentHash` instead).  So we can safely use tab and newline as field separators.
+* We don't need to worry about telling strings and integers apart because each field can hold an integer, or a string, but not both.  So we don't need to quote our strings with quote marks.
 
 The reference implementation is in `hashDocument()` in `src/validators/es4.ts`.  Here's a summary:
 
@@ -791,7 +876,9 @@ The reference implementation is in `hashDocument()` in `src/validators/es4.ts`. 
 // Typescript-style psuedocode
 
 let serializeDocumentForHashing = (doc: Document): string => {
-    // Fields in lexicographic order.
+    // We've hardcoded the algorithm here since we
+    //  know what the fields are.
+    // Fields are in lexicographic order.
     // Convert numbers to strings.
     // Omit properties that are null.
     // Use the contentHash instead of the content.
@@ -806,7 +893,7 @@ let serializeDocumentForHashing = (doc: Document): string => {
         `path\t${doc.path}\n` +
         `timestamp\t${doc.timestamp}\n` +
         `workspace\t${doc.workspace}\n`
-        // Note the \n is included on the last item too
+        // Note the \n is included on the last item too.
     );
 }
 
@@ -826,10 +913,11 @@ let signDocument = (keypair: AuthorKeypair, doc: Document): Document => {
 }
 ```
 
-Actual example
+Actual example data:
 
 ```
 INPUT (shown as JSON, but is actually in memory before serialization)
+
 {
   "format": "es.4",
   "workspace": "+gardening.friends",
@@ -842,7 +930,10 @@ INPUT (shown as JSON, but is actually in memory before serialization)
   "signature": ""  // is empty before signing has occurred
 }
 
-SERIALIZED FOR HASHING:
+SERIALIZED FOR HASHING
+(tabs and newlines should be real but
+ are represented here as \t \n):
+
 author\t@suzy.bjzee56v2hd6mv5r5ar3xqg3x3oyugf7fejpxnvgquxcubov4rntq\n
 contentHash\tbt3u7gxpvbrsztsm4ndq3ffwlrtnwgtrctlq4352onab2oys56vhq\n
 format\tes.4\n
@@ -850,17 +941,29 @@ path\t/wiki/shared/Flowers\n
 timestamp\t1597026338596000\n
 workspace\t+gardening.friends\n
 
-HASHED AND ENCODED AS BASE32:
+HASHED WITH SHA256 AND ENCODED AS BASE32:
+
 b6nyw25gum45gcxbhez3ykx3jopkhlfjj2rnmfb7rt6yhkszvidsa
 
 AUTHOR KEYPAIR:
+(author address must match the author in the document)
+
 {
   "address": "@suzy.bjzee56v2hd6mv5r5ar3xqg3x3oyugf7fejpxnvgquxcubov4rntq",
   "secret": "b6jd7p43h7kk77zjhbrgoknsrzpwewqya35yh4t3hvbmqbatkbh2a"
 }
 
-SIGNATURE;
+SIGNATURE AS BASE32:
+
 bjljalsg2mulkut56anrteaejvrrtnjlrwfvswiqsi2psero22qqw7am34z3u3xcw7nx6mha42isfuzae5xda3armky5clrqrewrhgca
+
+FINAL SIGNED DOCUMENT:
+
+{
+    ...same as the original, except with signature:
+
+    "signature": "bjljalsg2mulkut56anrteaejvrrtnjlrwfvswiqsi2psero22qqw7am34z3u3xcw7nx6mha42isfuzae5xda3armky5clrqrewrhgca"
+}
 ```
 
 > **Why use `contentHash` instead of `content` for hashing documents?**
@@ -871,9 +974,11 @@ bjljalsg2mulkut56anrteaejvrrtnjlrwfvswiqsi2psero22qqw7am34z3u3xcw7nx6mha42isfuza
 
 This is a **two-way** conversion between memory and bytes.
 
-Earthstar doesn't have strong opinions about networking.  This format does not need to be standardized, but it's good to choose widely used familiar tools.  JSON is a good default choice.
+Earthstar doesn't have strong opinions about networking.  This format does not need to be standardized, but it's good to choose widely used familiar tools.  
 
-**Other good choices**:
+Apps and libraries SHOULD use JSON (encoded as UTF-8) as a default choice unless there are important reasons to choose otherwise.  JSON is widely known, widely supported, and fits within most network protocols easily.
+
+**Other options to consider**:
 
 * Encodings
   * JSON
@@ -897,22 +1002,26 @@ It needs to support efficient mutation and deletion of documents, and querying b
 
 It would be nice if this was an archival format (corruption-resistant and widely known).
 
-**Good choices:**
+**Options to consider:**
 
 * SQLite
 * Postgres
 * IndexedDB
-* leveldb (with extra indexes)
+* leveldb or similar key-value databases (with extra indexes)
 * a bunch of JSON files, one for each document (with extra indexes)
 
 For exporting and importing data:
-* one giant newline-delimited JSON file
+* one giant newline-delimited JSON file, one document per line, is easier to parse than a giant JSON array of documents.
 
 ## Querying
 
 Libraries SHOULD support a standard variety of queries against a database of Earthstar messages.  A query is specified by a single object with optional fields for each kind of query operation.
 
-The recommended query object format, expressed in Typescript, is (see [query.ts](https://github.com/earthstar-project/earthstar/blob/main/src/storage/query.ts) for the latest version of this):
+This query format will become standardized because it will be used for querying from one peer to another.  It's not quite stable yet.
+
+This only supports relatively simple ways of querying and filtering documents because we want to make it easy to use many different kinds of backend storage which may have limited query capabilities.  Apps and libraries MAY add extensions for more powerful querying if they're able to, but this should be considered the minimal set for compatability across peers.
+
+The recommended query object format, expressed in Typescript, is... (see [query.ts](https://github.com/earthstar-project/earthstar/blob/main/src/storage/query.ts) for the latest version of this):
 
 ```ts
 /**
@@ -1008,8 +1117,6 @@ export interface Query {
     },
 };
 ```
-
-A library MAY support merging multiple queries.  See the Sync Queries section for more details about how this works.
 
 ## Syncing
 
