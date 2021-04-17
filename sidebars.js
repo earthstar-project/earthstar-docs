@@ -14,6 +14,7 @@ module.exports = {
             'how-to/check-author-keys',
         ],
         'Reference': [
+            'reference/code-style',
             'reference/earthstar-specification',
         ],
         'Articles in Depth': [
