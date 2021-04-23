@@ -569,15 +569,52 @@ interface Doc {
 }
 ```
 
-All fields are REQUIRED.  Some fields may be null; these MUST NOT be omitted.
+Here we use the words "fields" and "properties" to mean the same thing.
 
-Extra fields are FORBIDDEN.
+The fields above are called the "core fields".  All core fields are REQUIRED.  Some core fields may be null; these MUST NOT be omitted; they MUST be exlicitly set to null if they are null.
 
-All string fields MUST BE limited to `PRINTABLE_ASCII` characters except for `content`, which is utf-8, or they can be null if specified above.  `PRINTABLE_ASCII` is defined earlier, and notably does not contain newline or tab characters, which are reserved for use in the serialization format we use for hashing and signing.
+Extra fields are FORBIDDEN as part of this core document schema, but see the **Extra Fields For Ssncing ** section below.
+
+All string fields MUST BE limited to `PRINTABLE_ASCII` characters except for `content`, which is utf-8, or string fields can be null if specified above.  `PRINTABLE_ASCII` is defined earlier, and notably does not contain newline or tab characters, which are reserved for use in the serialization format we use for hashing and signing.
 
 All number fields MUST BE integers, and cannot be NaN or Infinity, but they can be null if specified above.
 
-The order of fields is unspecified except for hashing and signing purposes (see section below).  For consistency, the recommended canonical order is lexicographic by field name.
+The order of fields is unspecified except for hashing and signing purposes (see section below).  For consistency, the recommended canonical order is sorted lexicographically by field name.
+
+### Extra Fields For Syncing
+
+When sending documents over the network, peers may add additional properties as synchronization metadata. These extra fields MUST all have names beginning with an underscore to separate them from the core fields, and the the receiving peer MUST remove these fields before storing the document.
+
+Likewise, when Earthstar libraries store documents internally, and send them over the network, they MAY add their own extra fields which MUST have names beginning with an underscore.
+
+In other words, during storage the extra fields are "owned" by the local peer that's doing the storage.  During syncing, the fields are "owned" by the sending peer, and they are observed and removed by the receiving peer, which may in turn set its own extra fields before storing the document and/or before sending it again over the network.  The content of extra fields MUST NOT propagate or spread across the network of peers except for the brief moment of a single transmission, before they are removed by the receiving peer.
+
+> **Example of extra fields for syncing:**
+>
+> These extra fields are not standardized yet.
+>
+> ```ts
+> interface DocWithExtraFields extends Doc {
+>     // (...The core fields will be present here also.)
+>
+>     // All extra fields must begin with an underscore.
+>
+>     // An integer >= 0, from the peer that sent the doc or
+>     // or the peer storing it.  This represents the order
+>     // in which the peer obtained the document compared to
+>     // the other documents in its storage (in the same workspace).
+>     // This is kept locally in storage, and sent when syncing.
+>     // It's observed and removed from incoming docs when syncing
+>     // (and replaced with the receiving peer's own localIndex value)
+>     _localIndex: number,
+>
+>     // A unique ID of the storage instance that sent the doc.
+>     // This is only present when the doc is being sent,
+>     // it's not kept when the doc is at rest in storage.
+>     _fromStorageId: string,
+>
+> }
+> ```
 
 ### Document Validity
 
@@ -598,7 +635,7 @@ To be **valid** a document MUST pass ALL these rules, which are described in mor
 * `path` is a valid path string
 * `signature` is a base32 string with a leading `b`.  For the `es.4` format it must be 104 characters long including the `b`.
 * `workspace` is a valid workspace address string which matches the local workspace we are intending to write the document to
-* No extra fields
+* No extra fields.  Any **extra fields for syncing** as described above should be removed before testing for validity.
 * No missing fields
 * Additional rules about `timestamp` and `deleteAfter` relative to the current wall clock (see below)
 * Author has write permission to path based on tilde placement
