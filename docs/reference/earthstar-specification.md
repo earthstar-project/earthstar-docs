@@ -647,7 +647,11 @@ The `author` field holds an author address, formatted according to the rules des
 
 ### Content
 
-The `content` field contains arbitrary utf-8 encoded data.  If the data is not valid utf-8, the document is still considered valid but the library may return an error when trying to access the document.  (TODO: is this the best way to handle invalid utf-8?)
+The `content` field contains arbitrary utf-8 encoded data.  If the data is not valid utf-8, the document is still considered valid but the library's behavior is undefined when trying to access the content.
+
+The `content` field may be an empty string.  In fact, the recommended way to remove data from Earthstar is to overwrite the document with a new one which has `content = ""`.  Documents with empty-string content SHOULD be considered to be "deleted" and therefore omitted from some query results so that apps don't see them.  This depends on context; when syncing documents it's important to sync the "deleted" documents too because they act as tombstones.
+
+The maximum length of the content field is 4 million bytes (4,000,000 bytes).  This is measured as "bytes when encoded as utf-8", not naive string length.
 
 To store raw binary data in a utf-8 string, apps SHOULD encode it as base64.  In this case apps SHOULD put a file extension on the path that's well-known to be a binary format.  If you don't know what file extension to choose, use `.b64`.
 
@@ -659,9 +663,6 @@ TODO: We will be adding support for binary data and a way to unambiguously know 
 >
 > Common encodings such as JSON, and protocols built on them such as JSON-RPC and GraphQL, have to way to represent binary data, and we want to support the "least common denominator" standards that are widely used and known.
 
-The `content` field may be an empty string.  In fact, the recommended way to remove data from Earthstar is to overwrite the document with a new one which has `content = ""`.  Documents with empty-string content SHOULD be considered to be "deleted" and therefore omitted from some query results so that apps don't see them.  This depends on context; when syncing documents it's important to sync the "deleted" documents too because they act as tombstones.
-
-TODO: The `content` field will have a maximum length of ??? bytes, to be determined, but likely on the order of 4 megabytes.  This is measured as "bytes after encoding to utf-8", not "number of utf-8 runes".
 
 #### Sparse Mode (eventually)
 
