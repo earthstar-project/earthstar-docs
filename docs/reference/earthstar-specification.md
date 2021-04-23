@@ -651,7 +651,7 @@ The `content` field contains arbitrary utf-8 encoded data.  If the data is not v
 
 The `content` field may be an empty string.  In fact, the recommended way to remove data from Earthstar is to overwrite the document with a new one which has `content = ""`.  Documents with empty-string content SHOULD be considered to be "deleted" and therefore omitted from some query results so that apps don't see them.  This depends on context; when syncing documents it's important to sync the "deleted" documents too because they act as tombstones.
 
-The maximum length of the content field is 4 million bytes (4,000,000 bytes).  This is measured as "bytes when encoded as utf-8", not naive string length.
+The maximum length of the content field is 4 million bytes (4,000,000 bytes).  This is measured as "bytes when encoded as utf-8", not naive string length.  (This means the overall document, when encoded as JSON, can be slightly larger than 4 million bytes - the rest of the fields add about 450 bytes more.)
 
 To store raw binary data in a utf-8 string, apps SHOULD encode it as base64.  In this case apps SHOULD put a file extension on the path that's well-known to be a binary format.  If you don't know what file extension to choose, use `.b64`.
 
