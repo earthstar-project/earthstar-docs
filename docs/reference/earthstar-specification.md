@@ -4,7 +4,7 @@ title: Earthstar Specification
 
 Format: `es.4`
 
-Document version: 2021-04-03.0
+Document version: 2021-04-23.0
 
 > The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
 > NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
