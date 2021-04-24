@@ -573,7 +573,7 @@ Here we use the words "fields" and "properties" to mean the same thing.
 
 The fields above are called the "core fields".  All core fields are REQUIRED.  Some core fields may be null; these MUST NOT be omitted; they MUST be exlicitly set to null if they are null.
 
-Extra fields are FORBIDDEN as part of this core document schema, but see the **Extra Fields For Ssncing ** section below.
+Extra fields are FORBIDDEN as part of this core document schema, but are allowed during syncing -- see the **Extra Fields For Syncing** section below.
 
 All string fields MUST BE limited to `PRINTABLE_ASCII` characters except for `content`, which is utf-8, or string fields can be null if specified above.  `PRINTABLE_ASCII` is defined earlier, and notably does not contain newline or tab characters, which are reserved for use in the serialization format we use for hashing and signing.
 
@@ -588,6 +588,8 @@ When sending documents over the network, peers may add additional properties as 
 Likewise, when Earthstar libraries store documents internally, and send them over the network, they MAY add their own extra fields which MUST have names beginning with an underscore.
 
 In other words, during storage the extra fields are "owned" by the local peer that's doing the storage.  During syncing, the fields are "owned" by the sending peer, and they are observed and removed by the receiving peer, which may in turn set its own extra fields before storing the document and/or before sending it again over the network.  The content of extra fields MUST NOT propagate or spread across the network of peers except for the brief moment of a single transmission, before they are removed by the receiving peer.
+
+Extra fields are NOT included in the document's signature.
 
 > **Example of extra fields for syncing:**
 >
