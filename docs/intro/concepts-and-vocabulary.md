@@ -386,7 +386,7 @@ TODO: how to link to a specific version of a document?
 
 This is specific to the Javascript implementation; other libraries might have different internal structures.
 
-![](../_img/building-blocks.png)
+![](/img/building-blocks.png)
 
 ## Replication / Syncing
 
@@ -432,7 +432,7 @@ Each document has a history of old versions.  Earthstar keeps one version from e
 
 When fetching a path, the latest version is returned (by author-asserted timestamp).  You can also get all versions if you want to do manual conflict resolution.
 
-![](../_img/earthstar-data-model.png)
+![](/img/earthstar-data-model.png)
 
 Note that this image is simplified.  A real document looks approximately like this:
 

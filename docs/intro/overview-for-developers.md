@@ -2,7 +2,7 @@
 title: Overview for Developers
 ---
 
-![earthstar logo](../_img/earthstar-logo-small.png)
+![earthstar logo](/img/earthstar-logo-small.png)
 
 Earthstar is a distributed p2p database and app-making toolkit.
 
